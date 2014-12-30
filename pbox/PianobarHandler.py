@@ -2,7 +2,7 @@ import re
 import subprocess, logging
 import math
 from Adafruit_CharLCD import Adafruit_CharLCD
-
+import RPi.GPIO as GPIO
 
 class PianobarHandler:
 
@@ -45,7 +45,7 @@ class PianobarHandler:
         text = self.pianobar_output.read()
 
         infoIter = re.finditer('\>.*by.*on.*', text)
-        infoStr = ""
+        infoStr = None
         for item in infoIter:
             infoStr = item
 
@@ -61,6 +61,7 @@ class PianobarHandler:
             artist = ' '.join(infoStrSplit[byIdx+1:onIdx])
             artist = artist.replace('"','')
             songInfo = [song,artist]
+
         else:
             songInfo = ['','']
         return songInfo
@@ -99,6 +100,13 @@ class PianobarHandler:
             lcd.clear()
             lcd.message(display[0])
         return display
+
+LOVE_LED_PIN = 9
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LOVE_LED_PIN, GPIO.OUT)
+GPIO.output(LOVE_LED_PIN, GPIO.LOW)
+
+
 
 pb = PianobarHandler()
 pb.updateDisplay(pb.getSongInfo(),Adafruit_CharLCD(),['',0,0])
