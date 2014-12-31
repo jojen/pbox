@@ -1,3 +1,6 @@
 #!/bin/sh
 
-python /opt/pbox/PianobarHandler.py
+case "$1" in
+        songstart)
+        python /opt/pbox/PianobarHandler.py
+esac
