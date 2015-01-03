@@ -1,49 +1,76 @@
+from random import randint
 import re
 import subprocess, logging
-import math
+import math, time
 from Adafruit_CharLCD import Adafruit_CharLCD
-import RPi.GPIO as GPIO
+
 
 class PianobarHandler:
 
     def __init__(self):
         self.fifo = "/root/.config/pianobar/ctl"
-        logging.info("init pianobar")
         self.pianobar_output = open("/opt/pbox/pianobar.out","r+")
-
+        self.logger = logging.getLogger('pbox')
+        self.lcd = Adafruit_CharLCD()
 
     def start(self):
+        self.logger.debug("start subprocess pianobar")
         #Start pianobar
         self.pianobar_output = open("/opt/pbox/pianobar.out","w")
         subprocess.Popen('aoss pianobar', shell=True, stdout = self.pianobar_output)
 
     def stop(self):
-        print('Stopping pianobar!')
         #Stop pianobar
         self.writeFifo(command = 'q')
 
 
     def playPause(self):
-        print('Play/Pause')
         self.writeFifo(command = 'p')
 
     def next(self):
-        print('Next')
         self.writeFifo(command = 'n')
 
     def love(self):
-        print('Love')
         self.writeFifo(command = '+')
 
     def ban(self):
-        print('Ban')
         #Ban song for 1 month
         self.writeFifo(command = '-')
+
+    def changeStation(self):
+        self.logger.debug("change station")
+        f = open("/opt/pbox/pianobar.out",'r+')
+        f.truncate()
+
+        self.writeFifo(command = 's')
+        time.sleep(1)
+        stationtext = f.read()
+
+        i = 0
+        haveStations = True
+        stations = []
+        while haveStations:
+            if str(i)+")" in stationtext:
+                stationtext = stationtext.split(str(i)+")")[1]
+                i += 1
+
+                if "\n" in stationtext:
+                    station = stationtext.split("\n")[0]
+                    stations.append(re.sub('\s{1,}[q,Q]\s{1,}', '', station))
+            else:
+                haveStations = False
+
+        self.logger.info(stations)
+        if len(stations) > 0:
+            number = randint(0, len(stations)-1)
+            self.lcd.clear()
+            self.lcd.message(stations[number])
+            self.writeFifo(command = str(number))
+            self.writeFifo(command = '\n')
 
     def getSongInfo(self):
 
         text = self.pianobar_output.read()
-
         infoIter = re.finditer('\>.*by.*on.*', text)
         infoStr = None
         for item in infoIter:
@@ -73,7 +100,7 @@ class PianobarHandler:
         fifo_w.write(command)
         fifo_w.close()
 
-    def updateDisplay(self,songInfo,lcd,displayOld):
+    def updateDisplay(self,songInfo,displayOld):
         display = ['',displayOld[1],displayOld[2]]
         #Song - line1
         if len(songInfo[0]) <= 16: #Center on screen
@@ -97,16 +124,6 @@ class PianobarHandler:
                 display[2] = 0
         display[0] = str(line1 + '\n' + line2)
         if display[0] != displayOld[0]: #Only update if new
-            lcd.clear()
-            lcd.message(display[0])
+            self.lcd.clear()
+            self.lcd.message(display[0])
         return display
-
-LOVE_LED_PIN = 9
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(LOVE_LED_PIN, GPIO.OUT)
-GPIO.output(LOVE_LED_PIN, GPIO.LOW)
-
-
-
-pb = PianobarHandler()
-pb.updateDisplay(pb.getSongInfo(),Adafruit_CharLCD(),['',0,0])
