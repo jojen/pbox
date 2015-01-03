@@ -99,11 +99,15 @@ def init():
             GPIO.cleanup()
             exit()
 
+try:
 
-if len(sys.argv) == 1:
-    startPianobar()
-    init()
+    if len(sys.argv) == 1:
+        startPianobar()
+        init()
 
-if len(sys.argv) == 2:
-    if sys.argv[1] == "songstart":
-        update()
+    if len(sys.argv) == 2:
+        if sys.argv[1] == "songstart":
+            update()
+
+except Exception as e:
+    logger.exception(e)

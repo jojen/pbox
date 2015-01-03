@@ -3,6 +3,7 @@ import re
 import subprocess, logging
 import math, time
 from Adafruit_CharLCD import Adafruit_CharLCD
+import configparser, itertools
 
 
 class PianobarHandler:
@@ -12,6 +13,8 @@ class PianobarHandler:
         self.pianobar_output = open("/opt/pbox/pianobar.out","r+")
         self.logger = logging.getLogger('pbox')
         self.lcd = Adafruit_CharLCD()
+        self.config = configparser.ConfigParser()
+
 
     def start(self):
         self.logger.debug("start subprocess pianobar")
@@ -43,7 +46,7 @@ class PianobarHandler:
         f.truncate()
 
         self.writeFifo(command = 's')
-        time.sleep(1)
+        time.sleep(1.5)
         stationtext = f.read()
 
         i = 0
@@ -62,11 +65,59 @@ class PianobarHandler:
 
         self.logger.info(stations)
         if len(stations) > 0:
+            try:
+                stationFile = open("/opt/pbox/station","r")
+
+            except IOError:
+                stationFile = open("/opt/pbox/station",'w+')
+                stationFile.close()
+                stationFile = open("/opt/pbox/station","r")
+
+
+            numberCandidate = stationFile.read()
             number = randint(0, len(stations)-1)
+            self.logger.debug("current station number:"+ numberCandidate)
+            if numberCandidate.isdigit():
+                nr= int(numberCandidate) + 1
+                if nr >= len(stations):
+                    number = 0
+                else:
+                    number = nr
+            stationFile = open("/opt/pbox/station",'w')
+            stationFile.truncate()
+            stationFile.write(str(number))
+            stationFile.close()
+
+            pos = 16
+            station = list(stations[number])
+            if len(station) > pos:
+                while pos > 0:
+                    if station[pos] == ' ':
+                        station[pos] = '\n'
+                        pos = 0
+                    pos -= 1
+
             self.lcd.clear()
-            self.lcd.message(stations[number])
+            self.lcd.message("".join(station))
             self.writeFifo(command = str(number))
             self.writeFifo(command = '\n')
+            # jetzt speichern wir das
+            time.sleep(2)
+            stationGroup = re.search("Station \".*\" \((.*)\)", f.read())
+            if stationGroup is not None:
+                stationId = stationGroup.group(1)
+                self.logger.info("set new autostart station: "+stationId)
+                f = open("/root/.config/pianobar/config",'r')
+                config = f.read()
+                f.close()
+
+
+                newConfig = re.sub("autostart_station = ([0-9].*)","autostart_station = "+stationId,config)
+                f = open("/root/.config/pianobar/config",'w')
+                f.write(newConfig)
+                f.close()
+
+
 
     def getSongInfo(self):
 
