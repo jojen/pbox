@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo $((510241024)) > /proc/sys/net/core/rmem_max
+
 # check if internet is available
 ((count = 1000))
 while [[ $count -ne 0 ]] ; do

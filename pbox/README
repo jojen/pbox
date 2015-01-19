@@ -75,7 +75,7 @@ systemctl enable netctl-auto@wlan0
 ########## install pianobar
 pacman -S pianobar
 # set max buffer size to 5mb (https://github.com/PromyLOPh/pianobar/issues/426)
-echo $((510241024)) > /proc/sys/net/core/rmem_max
+# echo $((510241024)) > /proc/sys/net/core/rmem_max
 mkdir /root/.config
 mkdir /root/.config/pianobar
 nano /root/.config/pianobar/config
