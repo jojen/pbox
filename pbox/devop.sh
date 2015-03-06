@@ -5,17 +5,17 @@ do
 case ${i} in
     -d|--deploy)
     echo "deploy"
-    scp -r  * root@192.168.1.10:/opt/
+    scp -r  * root@192.168.1.9:/opt/
     ;;
 
     -s|--start)
     echo "start"
-    ssh root@192.168.1.10 /usr/bin/systemctl restart pbox.service
+    ssh root@192.168.1.9 /usr/bin/systemctl restart pbox.service
     ;;
 
     -q|--quit)
     echo "quit"
-    ssh root@192.168.1.10 /usr/bin/systemctl stop pbox.service
+    ssh root@192.168.1.9 /usr/bin/systemctl stop pbox.service
     ;;
 
      -h|--help)
