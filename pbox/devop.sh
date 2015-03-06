@@ -1,21 +1,23 @@
 #!/bin/bash
 
+TARGET_HOST=192.168.1.9
+
 for i in "$@"
 do
 case ${i} in
     -d|--deploy)
     echo "deploy"
-    scp -r  * root@192.168.1.9:/opt/
+    scp -r  * root@${TARGET_HOST}:/opt/
     ;;
 
     -s|--start)
     echo "start"
-    ssh root@192.168.1.9 /usr/bin/systemctl restart pbox.service
+    ssh root@${TARGET_HOST} /usr/bin/systemctl restart pbox.service
     ;;
 
     -q|--quit)
     echo "quit"
-    ssh root@192.168.1.9 /usr/bin/systemctl stop pbox.service
+    ssh root@${TARGET_HOST} /usr/bin/systemctl stop pbox.service
     ;;
 
      -h|--help)

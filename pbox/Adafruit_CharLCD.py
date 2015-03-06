@@ -7,7 +7,7 @@
 #
 
 from time import sleep
-
+from Constants import _Constants
 
 class Adafruit_CharLCD(object):
 
@@ -53,7 +53,7 @@ class Adafruit_CharLCD(object):
     LCD_5x10DOTS            = 0x04
     LCD_5x8DOTS             = 0x00
 
-    def __init__(self, pin_rs=21, pin_e=20, pins_db=[16,12,25,24], GPIO=None):
+    def __init__(self, pin_rs=_Constants.LCD_RS, pin_e=_Constants.LCD_E, pins_db=[_Constants.LCD_DB1,_Constants.LCD_DB2,_Constants.LCD_DB3,_Constants.LCD_DB4], GPIO=None):
         # Emulate the old behavior of using RPi.GPIO if we haven't been given
         # an explicit GPIO interface to use
         if not GPIO:

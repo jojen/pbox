@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# set max buffer size to 5mb (https://github.com/PromyLOPh/pianobar/issues/426)
 echo $((510241024)) > /proc/sys/net/core/rmem_max
 
 # check if internet is available

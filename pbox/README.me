@@ -90,7 +90,9 @@ netctl start wlan0
 systemctl enable netctl-auto@wlan0
 ```
 
-h2. SSH Public Key
+SSH Public Key
+--------------
+
 # Auf Workstation
 ```
 ssh-keygen -t rsa
@@ -104,15 +106,14 @@ Install Python and GPIO
 pacman -S python gcc
 wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.5.11.tar.gz
 tar xf RPi.GPIO-0.5.11.tar.gz
-python RPi.GPIO-0.5.11/setup.py install
+cd RPi.GPIO-0.5.11
+python setup.py install
 
 
 Install pianobar
 ----------------
 
 pacman -S pianobar
-# set max buffer size to 5mb (https://github.com/PromyLOPh/pianobar/issues/426)
-# echo $((510241024)) > /proc/sys/net/core/rmem_max
 mkdir /root/.config
 mkdir /root/.config/pianobar
 nano /root/.config/pianobar/config
@@ -214,7 +215,6 @@ Verzeichnisse anlegen
 ---------------------
 
 mkdir /opt/pbox
-nano /opt/pbox/pbox
 
 Deployment
 ----------
