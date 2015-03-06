@@ -1,9 +1,16 @@
-Install Arch Linux an memory card
+h1. Pandora Box - based on Arch Linux / Raspberry Pi
 
-########### update system
-pacman -Syu
+h2. Betriebssystem
 
-########## expand memory card
+# Arch Linux auf auf SD Karte kopieren
+# System Booten
+# Lokale Datenbank updaten
+```
+pacman -Syy
+```
+
+# SD Karter erweitern
+```
 fdisk /dev/mmcblk0
 
 Press ‘p’ to print the partition table:
@@ -46,12 +53,17 @@ Filesystem at /dev/mmcblk0p5 is mounted on /; on-line resizing required
 old_desc_blocks = 1, new_desc_blocks = 1
 The filesystem on /dev/mmcblk0p5 is now 3865984 blocks long.
 Done!
+```
 
-########## enable WIFI
+h2. Netzwerk
+
+# enable WIFI
+```
 cp /etc/netctl/examples/wireless-wpa /etc/netctl/wlan0
 nano /etc/netctl/wlan0
+```
 
-
+```
 Description='A simple WPA encrypted wireless connection'
 Interface=wlan0
 Connection=wireless
@@ -66,10 +78,27 @@ ESSID=‘lin.jojen’
 Key=‘xxx’
 # Uncomment this if your ssid is hidden
 #Hidden=yes
+```
 
-
+```
 netctl start wlan0
 systemctl enable netctl-auto@wlan0
+```
+
+h2. SSH Public Key
+# Auf Workstation
+```
+ssh-keygen -t rsa
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.1.9
+```
+
+
+h2. Install Python and GPIO
+
+pacman -S python gcc
+wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.5.11.tar.gz
+tar xf RPi.GPIO-0.5.11.tar.gz
+python RPi.GPIO-0.5.11/setup.py install
 
 
 ########## install pianobar
@@ -80,7 +109,7 @@ mkdir /root/.config
 mkdir /root/.config/pianobar
 nano /root/.config/pianobar/config
 
-
+```
 # This is an example configuration file for pianobar. You may remove the # from
 # lines you need and copy/move this file to ~/.config/pianobar/config
 # See manpage for a description of the config keys
@@ -157,55 +186,47 @@ fifo = /root/.config/pianobar/ctl
 #encrypt_password = 2%3WCL*JU$MP]4
 #decrypt_password = U#IO$RZPAB%VX2
 #tls_fingerprint = B0A1EB460B1B6F33A1B6CB500C6523CB2E6EC946
+```
 
-########## Create FIFO
+h2. Create FIFO
 mkfifo ~/.config/pianobar/ctl
 
-########## change sound driver
+h2. change sound driver
 pacman -S alsa-oss
 nano /etc/libao.conf
 default_driver=oss
 #dev=default
 
 
-########## create pbox
+h2. Verzeichnisse anlegen
+
 mkdir /opt/pbox
 nano /opt/pbox/pbox
 
-#!/bin/bash
+h2. Deployment
 
-# check if internet is available
-((count = 1000))
-while [[ $count -ne 0 ]] ; do
-    ping -c 1 8.8.8.8
-    rc=$?
-    if [[ $rc -eq 0 ]] ; then
-        ((count = 1))
-    fi
-    ((count = count - 1))
-done
+Von der Entwicklungsmaschine die devop skripte verwenden
+oder checkout von Github
 
-if [[ $rc -eq 0 ]] ; then
-   aoss pianobar >/dev/null
-else
-    echo “no internet :(“
-fi
 
 chmod +x /opt/pbox/pbox.sh
 
-########## make autostart
+h2. Autostart Applikation
+
 nano /etc/systemd/system/pbox.service
 
+```
 [Unit]
 Description=Starting Pbox
 After=network.target
 
 [Service]
 User=root
-ExecStart=/opt/pbox/pbox
+ExecStart=/opt/pbox/pbox.sh
 
 [Install]
 WantedBy=multi-user.target
+```
 
 systemctl enable pbox.service
 systemctl start pbox.service
