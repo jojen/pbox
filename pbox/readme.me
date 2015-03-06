@@ -1,10 +1,13 @@
-h1. Pandora Box - based on Arch Linux / Raspberry Pi
+Pandora Box - based on Arch Linux / Raspberry Pi
+================================================
 
-h2. Betriebssystem
+Betriebssystem
+--------------
 
 # Arch Linux auf auf SD Karte kopieren
 # System Booten
-# Lokale Datenbank updaten
+# Lokale Datenbank aktualisieren
+
 ```
 pacman -Syy
 ```
@@ -55,9 +58,11 @@ The filesystem on /dev/mmcblk0p5 is now 3865984 blocks long.
 Done!
 ```
 
-h2. Netzwerk
+Netzwerk
+--------
 
 # enable WIFI
+
 ```
 cp /etc/netctl/examples/wireless-wpa /etc/netctl/wlan0
 nano /etc/netctl/wlan0
@@ -93,7 +98,8 @@ ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.1.9
 ```
 
 
-h2. Install Python and GPIO
+Install Python and GPIO
+-----------------------
 
 pacman -S python gcc
 wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.5.11.tar.gz
@@ -101,7 +107,9 @@ tar xf RPi.GPIO-0.5.11.tar.gz
 python RPi.GPIO-0.5.11/setup.py install
 
 
-########## install pianobar
+Install pianobar
+----------------
+
 pacman -S pianobar
 # set max buffer size to 5mb (https://github.com/PromyLOPh/pianobar/issues/426)
 # echo $((510241024)) > /proc/sys/net/core/rmem_max
@@ -188,22 +196,28 @@ fifo = /root/.config/pianobar/ctl
 #tls_fingerprint = B0A1EB460B1B6F33A1B6CB500C6523CB2E6EC946
 ```
 
-h2. Create FIFO
+Create FIFO
+-----------
+
 mkfifo ~/.config/pianobar/ctl
 
-h2. change sound driver
+Change sound driver
+-------------------
+
 pacman -S alsa-oss
 nano /etc/libao.conf
 default_driver=oss
 #dev=default
 
 
-h2. Verzeichnisse anlegen
+Verzeichnisse anlegen
+---------------------
 
 mkdir /opt/pbox
 nano /opt/pbox/pbox
 
-h2. Deployment
+Deployment
+----------
 
 Von der Entwicklungsmaschine die devop skripte verwenden
 oder checkout von Github
@@ -211,7 +225,8 @@ oder checkout von Github
 
 chmod +x /opt/pbox/pbox.sh
 
-h2. Autostart Applikation
+Autostart Applikation
+---------------------
 
 nano /etc/systemd/system/pbox.service
 
