@@ -33,8 +33,9 @@ def startPianobar():
     pb.start()
 
 def update():
-    GPIO.setup(_Constants.LOVE_LED_PIN, GPIO.OUT)
-    GPIO.output(_Constants.LOVE_LED_PIN, GPIO.LOW)
+    if _Constants.LOVE_LED_PIN > 0:
+        GPIO.setup(_Constants.LOVE_LED_PIN, GPIO.OUT)
+        GPIO.output(_Constants.LOVE_LED_PIN, GPIO.LOW)
     pb.updateDisplay(pb.getSongInfo(),['',0,0])
 
 def init():
@@ -43,12 +44,15 @@ def init():
     GPIO.setup(_Constants.PAUSE_BUTTON_PIN, GPIO.IN)
     GPIO.setup(_Constants.LOVE_BUTTON_PIN, GPIO.IN)
     GPIO.setup(_Constants.BAN_BUTTON_PIN, GPIO.IN)
-    GPIO.setup(_Constants.LCD_BACKLIGHT_PIN, GPIO.OUT)
-    GPIO.output(_Constants.LCD_BACKLIGHT_PIN, GPIO.HIGH)
-    GPIO.setup(_Constants.LOVE_LED_PIN, GPIO.OUT)
-    GPIO.output(_Constants.LOVE_LED_PIN, GPIO.LOW)
-    GPIO.setup(_Constants.BAN_LED_PIN, GPIO.OUT)
-    GPIO.output(_Constants.BAN_LED_PIN, GPIO.LOW)
+    if _Constants.LCD_BACKLIGHT_PIN > 0:
+        GPIO.setup(_Constants.LCD_BACKLIGHT_PIN, GPIO.OUT)
+        GPIO.output(_Constants.LCD_BACKLIGHT_PIN, GPIO.HIGH)
+    if _Constants.LOVE_LED_PIN > 0:
+        GPIO.setup(_Constants.LOVE_LED_PIN, GPIO.OUT)
+        GPIO.output(_Constants.LOVE_LED_PIN, GPIO.LOW)
+    if _Constants.BAN_LED_PIN > 0:
+        GPIO.setup(_Constants.BAN_LED_PIN, GPIO.OUT)
+        GPIO.output(_Constants.BAN_LED_PIN, GPIO.LOW)
     state_pause = False
     while 1:
         try:
@@ -61,7 +65,8 @@ def init():
             if next_button_pressed:
                 logger.debug("next station button pressed")
                 pb.changeStation()
-                GPIO.output(_Constants.LOVE_LED_PIN, GPIO.LOW)
+                if _Constants.LOVE_LED_PIN > 0:
+                    GPIO.output(_Constants.LOVE_LED_PIN, GPIO.LOW)
                 time.sleep(0.7)
 
             if pause_button_pressed:
@@ -69,25 +74,30 @@ def init():
                 pb.playPause()
                 if state_pause:
                     state_pause = False
-                    GPIO.output(_Constants.LCD_BACKLIGHT_PIN, GPIO.HIGH)
+                    if _Constants.LCD_BACKLIGHT_PIN > 0:
+                        GPIO.output(_Constants.LCD_BACKLIGHT_PIN, GPIO.HIGH)
 
                 else:
                     state_pause = True
-                    GPIO.output(_Constants.LCD_BACKLIGHT_PIN, GPIO.LOW)
+                    if _Constants.LCD_BACKLIGHT_PIN > 0:
+                        GPIO.output(_Constants.LCD_BACKLIGHT_PIN, GPIO.LOW)
                 time.sleep(0.7)
 
             if love_button_pressed:
                 logger.debug("love button pressed")
-                GPIO.output(_Constants.LOVE_LED_PIN, GPIO.HIGH)
+                if(_Constants.LOVE_LED_PIN>0):
+                    GPIO.output(_Constants.LOVE_LED_PIN, GPIO.HIGH)
                 pb.love()
                 time.sleep(0.7)
 
             if ban_button_pressed:
                 logger.debug("ban button pressed")
-                GPIO.output(_Constants.BAN_LED_PIN, GPIO.HIGH)
+                if _Constants.BAN_LED_PIN > 0:
+                    GPIO.output(_Constants.BAN_LED_PIN, GPIO.HIGH)
                 pb.ban()
-                time.sleep(2)
-                GPIO.output(_Constants.BAN_LED_PIN, GPIO.LOW)
+                if _Constants.BAN_LED_PIN > 0:
+                    time.sleep(2)
+                    GPIO.output(_Constants.BAN_LED_PIN, GPIO.LOW)
 
         except KeyboardInterrupt:
             GPIO.cleanup()
