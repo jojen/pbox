@@ -12,9 +12,19 @@ import java.io.IOException;
 
 public class PBox {
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("Start Pianobar");
-        Runtime.getRuntime().exec("/usr/bin/pianobar");
+
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        System.out.println("start");
+        Pianobar pianobar = new Pianobar();
+        Thread.sleep(10000);
+        pianobar.playPause();
+        Thread.sleep(10000);
+        pianobar.playPause();
+        Thread.sleep(10000);
+        pianobar.stop();
+
+
 
         System.out.println("Start GPIO");
 
