@@ -6,11 +6,11 @@ import java.io.*;
  * Created by Jochen on 28.03.2016.
  */
 public class Pianobar {
-    Process pianobarProcess = null;
+    private Process pianobarProcess = null;
 
-    BufferedWriter ctl = null;
+    private BufferedWriter ctl = null;
 
-    public Pianobar() {
+    Pianobar() {
         try {
             System.out.println("start process");
             pianobarProcess = Runtime.getRuntime().exec("/usr/bin/pianobar");
@@ -22,13 +22,47 @@ public class Pianobar {
 
     }
 
-    public void playPause() throws IOException {
+    void playPause() {
         System.out.println("play / pause");
-        ctl.write("p");
-        ctl.flush();
+        try {
+            ctl.write("p");
+            ctl.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void stop() {
+    void next() {
+        System.out.println("next");
+        try {
+            ctl.write("p");
+            ctl.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void love() {
+        System.out.println("love");
+        try {
+            ctl.write("p");
+            ctl.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void bann() {
+        System.out.println("bann");
+        try {
+            ctl.write("p");
+            ctl.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void stop() {
         System.out.println("stop");
         pianobarProcess.destroy();
     }
