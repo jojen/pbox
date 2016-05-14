@@ -9,6 +9,7 @@ import net.sf.expectit.Expect;
 import net.sf.expectit.ExpectBuilder;
 
 import java.io.*;
+import java.net.Socket;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -23,9 +24,13 @@ public class Pianobar {
     private String nowPlaying = runDir + "nowplaying";
     private Integer stationId = 0;
     private Long lastUserInteractionTime;
-    private boolean isPause = false;
+    private Long startTime;
+    private boolean isPause = true;
     private String currentArtist = null;
     private LCD lcd;
+
+    Process process;
+    private boolean isStarted;
 
     Pianobar() {
         try {
@@ -33,28 +38,34 @@ public class Pianobar {
             lcd = new LCD();
             lcd.show("Hallo", "", LCD.KEY_MESSAGE);
             lastUserInteractionTime = System.currentTimeMillis();
-
-            ProcessBuilder builder = new ProcessBuilder("/usr/bin/pianobar");
-            final Process process = builder.start();
-
-            pianobar = new ExpectBuilder()
-                    .withInputs(process.getInputStream())
-                    .withOutput(process.getOutputStream())
-                    .withTimeout(10, TimeUnit.SECONDS)
-                    .withExceptionOnFailure()
-                    .withEchoInput(System.err)
-                    .withEchoOutput(System.out)
-                    .withExceptionOnFailure()
-                    .build();
-
+            waitUntilConnected();
+            startProcess();
             pianobar.expect(contains("Select station:"));
+            isStarted = true;
             pianobar.sendLine(stationId + "");
             updateSongOnDisplay();
+            isPause = false;
 
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void startProcess() throws IOException {
+        startTime = System.currentTimeMillis();
+        ProcessBuilder builder = new ProcessBuilder("/usr/bin/pianobar");
+
+        process = builder.start();
+        pianobar = new ExpectBuilder()
+                .withInputs(process.getInputStream())
+                .withOutput(process.getOutputStream())
+                .withTimeout(25, TimeUnit.SECONDS)
+                .withExceptionOnFailure()
+                .withEchoInput(System.err)
+                .withEchoOutput(System.out)
+                .withExceptionOnFailure()
+                .build();
     }
 
 
@@ -130,6 +141,22 @@ public class Pianobar {
         }
     }
 
+    public void heartbeat(){
+        if(!isStarted && System.currentTimeMillis() - startTime > 10000){
+            try {
+                process.destroy();
+                pianobar.close();
+                startProcess();
+                pianobar.expect(contains("Select station:"));
+                isStarted = true;
+                pianobar.sendLine(stationId + "");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        updateSongOnDisplay();
+    }
+
 
     public void updateSongOnDisplay() {
         if (!isPause) {
@@ -190,6 +217,32 @@ public class Pianobar {
             pianobar.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void waitUntilConnected() {
+        boolean connected = false;
+        int i = 0;
+        while (!connected) {
+            Socket socket = null;
+            try {
+                socket = new Socket("www.pandora.com", 80);
+                connected = socket.isConnected();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (!connected) {
+                try {
+                    Thread.sleep(1000);
+                    i++;
+                    lcd.show("keine Verbindung", "bereits " + i + " mal versucht","");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else {
+
+            }
         }
     }
 }

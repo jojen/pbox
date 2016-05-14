@@ -76,7 +76,7 @@ public class PBox {
 
             for (; ; ) {
                 Thread.sleep(5000);
-                pianobar.updateSongOnDisplay();
+                pianobar.heartbeat();
             }
         } catch (InterruptedException e) {
             System.out.println("interrupted");

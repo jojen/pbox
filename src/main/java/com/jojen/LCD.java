@@ -33,19 +33,20 @@ public class LCD {
     }
 
 
-
-
     void show(String s, String s2, String key) {
         if (s != null) {
             lcd.clear();
             if (s.length() > LCD_COLUMNS) {
                 s = s.substring(0, 16);
             }
+            if (s2.length() > LCD_COLUMNS) {
+                s2 = s2.substring(0, 16);
+            }
 
             if (key != null) {
                 switch (key) {
                     case KEY_STATION_CAHNGE:
-                        lcd.writeln(LCD_ROW_1, "neuer Sender");
+                        lcd.writeln(LCD_ROW_1, "neuer Sender", LCDTextAlignment.ALIGN_CENTER);
                         lcd.writeln(LCD_ROW_2, s);
                         break;
                     case KEY_MESSAGE:
