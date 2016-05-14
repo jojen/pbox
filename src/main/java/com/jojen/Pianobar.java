@@ -25,9 +25,9 @@ public class Pianobar {
     private Long lastUserInteractionTime;
     private boolean isPause = false;
     private String currentArtist = null;
-    LCD lcd;
+    private LCD lcd;
 
-    public Pianobar() {
+    Pianobar() {
         try {
             initStationId();
             lcd = new LCD();
@@ -87,7 +87,9 @@ public class Pianobar {
             lcd.show("Pausiere", "", LCD.KEY_MESSAGE);
         } else {
             isPause = false;
+            currentArtist = null;
             updateSongOnDisplay();
+
         }
         try {
             pianobar.send("p");
@@ -100,6 +102,7 @@ public class Pianobar {
         try {
             pianobar.send("+");
             lcd.show("Super Song :)", "", LCD.KEY_MESSAGE);
+            currentArtist = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -109,12 +112,13 @@ public class Pianobar {
         try {
             pianobar.send("-");
             lcd.show("Verbannt !", "", LCD.KEY_MESSAGE);
+            currentArtist = null;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void updateStationOnDisplay() {
+    private void updateStationOnDisplay() {
         Properties prop = new Properties();
         try {
             prop.load(new FileInputStream(nowPlaying));

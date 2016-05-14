@@ -45,7 +45,7 @@ public class LCD {
             if (key != null) {
                 switch (key) {
                     case KEY_STATION_CAHNGE:
-                        lcd.writeln(LCD_ROW_1, "neuer Sender:");
+                        lcd.writeln(LCD_ROW_1, "neuer Sender");
                         lcd.writeln(LCD_ROW_2, s);
                         break;
                     case KEY_MESSAGE:
