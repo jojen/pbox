@@ -27,29 +27,38 @@ public class LCD {
                 RaspiPin.GPIO_06,  // LCD data bit 3
                 RaspiPin.GPIO_05); // LCD data bit 4
     }
-    void show(String s) {
-        show(s,null);
-    }
-    void show(String s, String key) {
-        lcd.clear();
-        if (s.length() > LCD_COLUMNS) {
-            s = s.substring(0,16);
-        }
-        // hier scheinen wohl keine o's zu funktionieren
-        // TODO Whitlisting ür erlaubte Zeichen
-        s = s.replaceAll("[o,O]","0");
-        switch(key){
-            case KEY_STATION_CAHNGE:
-                lcd.writeln(LCD_ROW_1, "neuer Sender:");
-                lcd.writeln(LCD_ROW_2, s);
-                break;
-            case KEY_MESSAGE:
-                lcd.writeln(LCD_ROW_1,s,LCDTextAlignment.ALIGN_CENTER);
-                break;
-            default:
-                lcd.writeln(LCD_ROW_1, s);
-        }
 
+    void show(String s) {
+        show(s, null, null);
+    }
+
+
+
+
+    void show(String s, String s2, String key) {
+        if (s != null) {
+            lcd.clear();
+            if (s.length() > LCD_COLUMNS) {
+                s = s.substring(0, 16);
+            }
+
+            if (key != null) {
+                switch (key) {
+                    case KEY_STATION_CAHNGE:
+                        lcd.writeln(LCD_ROW_1, "neuer Sender:");
+                        lcd.writeln(LCD_ROW_2, s);
+                        break;
+                    case KEY_MESSAGE:
+                        lcd.writeln(LCD_ROW_1, s, LCDTextAlignment.ALIGN_CENTER);
+                        break;
+                    default:
+                        lcd.writeln(LCD_ROW_1, s);
+                        lcd.writeln(LCD_ROW_2, s2);
+                }
+            } else {
+                lcd.writeln(LCD_ROW_1, s);
+            }
+        }
 
     }
 }

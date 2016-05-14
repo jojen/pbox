@@ -1,153 +1,191 @@
 package com.jojen;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Created by Jochen on 28.03.2016.
+ * Created by Jochen on 17.04.2016.
  */
+
+
+import net.sf.expectit.Expect;
+import net.sf.expectit.ExpectBuilder;
+
+import java.io.*;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
+import static net.sf.expectit.matcher.Matchers.contains;
+
 public class Pianobar {
-    private LCD lcd;
-    private Process pianobarProcess = null;
-    private BufferedWriter ctl = null;
-    private BufferedWriter pianobarIn = null;
-    private BufferedReader pianobarOut = null;
-    private int stationId = 0;
-    File stationFile = new File("/opt/pbox/current_station.txt");
+
+
+    private Expect pianobar;
+    private String runDir = "/opt/pbox/run/";
+    private File stationFile = new File(runDir + "current_station");
+    private String nowPlaying = runDir + "nowplaying";
+    private Integer stationId = 0;
+    private Long lastUserInteractionTime;
     private boolean isPause = false;
+    private String currentArtist = null;
+    LCD lcd;
 
-
-    Pianobar(LCD lcd) throws IOException {
+    public Pianobar() {
         try {
-            this.lcd = lcd;
-            System.out.println("start process");
-            pianobarProcess = new ProcessBuilder("/usr/bin/pianobar").start();
-            FileWriter fileWriter = new FileWriter(new File("/root/.config/pianobar/ctl"), true);
-            ctl = new BufferedWriter(fileWriter);
-            pianobarOut = new BufferedReader(new
-                    InputStreamReader(pianobarProcess.getInputStream()));
-            pianobarIn = new BufferedWriter(new
-                    OutputStreamWriter(pianobarProcess.getOutputStream()));
+            initStationId();
+            lcd = new LCD();
+            lcd.show("Hallo", "", LCD.KEY_MESSAGE);
+            lastUserInteractionTime = System.currentTimeMillis();
 
-            // Wir holen uns die persistierte station ID
-            if (!stationFile.exists()) {
-                stationFile.createNewFile();
-            } else {
-                BufferedReader brTest = new BufferedReader(new FileReader(stationFile));
-                String text = brTest.readLine();
-                stationId = Integer.valueOf(text);
-            }
-        } catch (NumberFormatException | IOException e) {
-            e.printStackTrace();
-        }
-    }
+            ProcessBuilder builder = new ProcessBuilder("/usr/bin/pianobar");
+            final Process process = builder.start();
 
-    void playPause() {
-        System.out.println("play / pause");
-        try {
-            pianobarIn.write("p");
-            pianobarIn.flush();
-            if (!isPause) {
-                isPause = true;
-                lcd.show("Pause",LCD.KEY_MESSAGE);
-            } else {
-                isPause = false;
-            }
+            pianobar = new ExpectBuilder()
+                    .withInputs(process.getInputStream())
+                    .withOutput(process.getOutputStream())
+                    .withTimeout(10, TimeUnit.SECONDS)
+                    .withExceptionOnFailure()
+                    .withEchoInput(System.err)
+                    .withEchoOutput(System.out)
+                    .withExceptionOnFailure()
+                    .build();
+
+            pianobar.expect(contains("Select station:"));
+            pianobar.sendLine(stationId + "");
+            updateSongOnDisplay();
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    void next() {
-        System.out.println("next");
-        try {
-            pianobarIn.write("s");
-            pianobarIn.flush();
-            Thread.sleep(100);
 
-            boolean stationStarted = false;
-            List<String> stations = new ArrayList<>();
-
-            byte[] inputData = new byte[1024];
-            int readCount = readInputStreamWithTimeout(pianobarProcess.getInputStream(), inputData, 100);
-            String s = new String(inputData);
-
-            for (String line : s.split("\t")) {
-                if (line.contains("0) ")) {
-                    stationStarted = true;
-                }
-                if (stationStarted) {
-                    line = line.replaceAll("[ ]+[0-9]+\\)[ ]+[Q,q][ ]+", "");
-                    line = line.replaceAll("\n\u001B\\[2K", "");
-                    stations.add(line);
-                }
-            }
-            if (stations.size() > 0) {
-                if (stationId < stations.size() - 1) {
-                    stationId++;
-                } else {
+    public void nextStation() {
+        Long currentTime = System.currentTimeMillis();
+        if (currentTime - lastUserInteractionTime > 5000) {
+            try {
+                pianobar.send("s");
+                String lastRow = pianobar.expect(contains("QuickMix")).getBefore();
+                int maxStations = getMaxStations(lastRow);
+                stationId = stationId + 1;
+                if (stationId > maxStations) {
                     stationId = 0;
                 }
+                pianobar.expect(contains("Select station:"));
+                pianobar.sendLine(stationId + "");
+                lastUserInteractionTime = currentTime;
+                writeStationId();
+                updateStationOnDisplay();
 
-                lcd.show(stations.get(stationId),LCD.KEY_STATION_CAHNGE);
-
-                System.out.println("change station to " + stations.get(stationId));
-                pianobarIn.write(stationId + "\n\t\n");
-                pianobarIn.flush();
-                PrintWriter pw = new PrintWriter(new FileWriter(stationFile));
-                pw.write("" + stationId);
-                pw.close();
-            } else {
-                lcd.show("no station found");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
-
-    void love() {
-        System.out.println("love");
+    public void pause() {
+        if (!isPause) {
+            isPause = true;
+            lcd.show("Pausiere", "", LCD.KEY_MESSAGE);
+        } else {
+            isPause = false;
+            updateSongOnDisplay();
+        }
         try {
-            pianobarIn.write("+");
-            pianobarIn.flush();
+            pianobar.send("p");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    void bann() {
-        System.out.println("bann");
+    public void love() {
         try {
-            pianobarIn.write("-");
-            pianobarIn.flush();
+            pianobar.send("+");
+            lcd.show("Super Song :)", "", LCD.KEY_MESSAGE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void bann() {
+        try {
+            pianobar.send("-");
+            lcd.show("Verbannt !", "", LCD.KEY_MESSAGE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateStationOnDisplay() {
+        Properties prop = new Properties();
+        try {
+            prop.load(new FileInputStream(nowPlaying));
+            String stationName = prop.getProperty("station" + stationId);
+            lcd.show(stationName, "", LCD.KEY_STATION_CAHNGE);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    void stop() {
-        System.out.println("stop");
-        pianobarProcess.destroy();
-    }
 
-    private int readInputStreamWithTimeout(InputStream is, byte[] b, int timeoutMillis)
-            throws IOException {
-        int bufferOffset = 0;
-        long maxTimeMillis = System.currentTimeMillis() + timeoutMillis;
-        while (System.currentTimeMillis() < maxTimeMillis && bufferOffset < b.length) {
-            int readLength = java.lang.Math.min(is.available(), b.length - bufferOffset);
-            // can alternatively use bufferedReader, guarded by isReady():
-            int readResult = is.read(b, bufferOffset, readLength);
-            if (readResult == -1) break;
-            bufferOffset += readResult;
+    public void updateSongOnDisplay() {
+        if (!isPause) {
+            Properties prop = new Properties();
+            try {
+                prop.load(new FileInputStream(nowPlaying));
+                String artist = prop.getProperty("artist");
+                String title = prop.getProperty("title");
+                if (!artist.equals(currentArtist)) {
+                    lcd.show(artist, title, "");
+                    currentArtist = artist;
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        return bufferOffset;
     }
 
+
+    private void initStationId() throws IOException {
+        if (!stationFile.exists()) {
+            stationFile.createNewFile();
+        } else {
+            BufferedReader brTest = new BufferedReader(new FileReader(stationFile));
+            String text = brTest.readLine();
+            stationId = Integer.valueOf(text);
+        }
+    }
+
+    private int getMaxStations(String lastRow) {
+        for (int i = lastRow.length() - 1; i > 0; i--) {
+            char currentChar = lastRow.charAt(i);
+            char secondChar = lastRow.charAt(i - 1);
+            if (Character.isDigit(currentChar)) {
+                if (Character.isDigit(secondChar)) {
+                    return Integer.parseInt(lastRow.substring(i - 1, i + 1));
+                }
+                return Integer.parseInt(lastRow.substring(i, i + 1));
+            }
+        }
+        return 1;
+    }
+
+    private void writeStationId() {
+        try {
+            Writer wr = new FileWriter(stationFile);
+            wr.write(String.valueOf(stationId));
+            wr.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void stop() {
+        try {
+            pianobar.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

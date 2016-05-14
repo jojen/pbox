@@ -16,31 +16,40 @@ public class PBox {
 
     private static Pin loveLEDPin = RaspiPin.GPIO_03;
     private static Pin bannLEDPin = RaspiPin.GPIO_22;
+    private static Pin nextLEDPin = RaspiPin.GPIO_23;
+    private static Pin pauseLEDPin = RaspiPin.GPIO_24;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         final GpioController gpio = GpioFactory.getInstance();
         final GpioPinDigitalOutput loveLED = gpio.provisionDigitalOutputPin(loveLEDPin, "LoveLED", PinState.LOW);
         final GpioPinDigitalOutput bannLED = gpio.provisionDigitalOutputPin(bannLEDPin, "BannLED", PinState.LOW);
+        final GpioPinDigitalOutput nextLED = gpio.provisionDigitalOutputPin(nextLEDPin, "NextLED", PinState.LOW);
+        final GpioPinDigitalOutput pauseLED = gpio.provisionDigitalOutputPin(pauseLEDPin, "PauseLED", PinState.LOW);
 
         glowLED(loveLED);
         glowLED(bannLED);
+        glowLED(pauseLED);
+        glowLED(nextLED);
 
 
 
-        final Pianobar pianobar = new Pianobar(new LCD());
+        final Pianobar pianobar = new Pianobar();
 
         try {
             final GpioPinDigitalInput pauseButton = gpio.provisionDigitalInputPin(pausePin, PinPullResistance.PULL_DOWN);
             pauseButton.addListener((GpioPinListenerDigital) event -> {
                 if (event.getState().isHigh()) {
-                    pianobar.playPause();
+                    glowLED(pauseLED);
+                    pianobar.pause();
+
                 }
             });
 
             final GpioPinDigitalInput nextButton = gpio.provisionDigitalInputPin(nextPin, PinPullResistance.PULL_DOWN);
             nextButton.addListener((GpioPinListenerDigital) event -> {
                 if (event.getState().isHigh()) {
-                    pianobar.next();
+                    glowLED(nextLED);
+                    pianobar.nextStation();
                 }
             });
 
@@ -48,8 +57,9 @@ public class PBox {
 
             loveButton.addListener((GpioPinListenerDigital) event -> {
                 if (event.getState().isHigh()) {
-                    pianobar.love();
                     glowLED(loveLED);
+                    pianobar.love();
+
                 }
             });
 
@@ -58,13 +68,15 @@ public class PBox {
 
             bannButton.addListener((GpioPinListenerDigital) event -> {
                     if (event.getState().isHigh()) {
-                        pianobar.bann();
                         glowLED(bannLED);
+                        pianobar.bann();
+
                     }
             });
 
             for (; ; ) {
-                Thread.sleep(500);
+                Thread.sleep(5000);
+                pianobar.updateSongOnDisplay();
             }
         } catch (InterruptedException e) {
             System.out.println("interrupted");
