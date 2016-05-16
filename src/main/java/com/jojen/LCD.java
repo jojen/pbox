@@ -20,12 +20,12 @@ public class LCD {
     LCD() {
         this.lcd = new GpioLcdDisplay(LCD_ROWS,          // number of row supported by LCD
                 LCD_COLUMNS,       // number of columns supported by LCD
-                RaspiPin.GPIO_29,  // LCD RS pin
-                RaspiPin.GPIO_28,  // LCD strobe pin
-                RaspiPin.GPIO_27,  // LCD data bit 1
-                RaspiPin.GPIO_26,  // LCD data bit 2
-                RaspiPin.GPIO_06,  // LCD data bit 3
-                RaspiPin.GPIO_05); // LCD data bit 4
+                RaspiPin.GPIO_25,  // LCD RS pin
+                RaspiPin.GPIO_24,  // LCD strobe pin
+                RaspiPin.GPIO_23,  // LCD data bit 1
+                RaspiPin.GPIO_22,  // LCD data bit 2
+                RaspiPin.GPIO_21,  // LCD data bit 3
+                RaspiPin.GPIO_14); // LCD data bit 4
     }
 
     void show(String s) {

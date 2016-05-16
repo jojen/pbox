@@ -83,6 +83,7 @@ public class Pianobar {
                 pianobar.expect(contains("Select station:"));
                 pianobar.sendLine(stationId + "");
                 lastUserInteractionTime = currentTime;
+                isPause = false;
                 writeStationId();
                 updateStationOnDisplay();
 

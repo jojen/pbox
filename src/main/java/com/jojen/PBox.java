@@ -9,22 +9,24 @@ import java.util.concurrent.TimeUnit;
 
 public class PBox {
 
-    private static Pin pausePin = RaspiPin.GPIO_07;
-    private static Pin nextPin = RaspiPin.GPIO_00;
-    private static Pin lovePin = RaspiPin.GPIO_02;
-    private static Pin banPin = RaspiPin.GPIO_21;
+    private static Pin lovePin = RaspiPin.GPIO_06;
+    private static Pin banPin = RaspiPin.GPIO_05;
+    private static Pin nextPin = RaspiPin.GPIO_04;
+    private static Pin pausePin = RaspiPin.GPIO_01;
 
-    private static Pin loveLEDPin = RaspiPin.GPIO_03;
-    private static Pin bannLEDPin = RaspiPin.GPIO_22;
-    private static Pin nextLEDPin = RaspiPin.GPIO_23;
-    private static Pin pauseLEDPin = RaspiPin.GPIO_24;
+
+
+    private static Pin loveLEDPin = RaspiPin.GPIO_29;
+    private static Pin bannLEDPin = RaspiPin.GPIO_28;
+    private static Pin nextLEDPin = RaspiPin.GPIO_27;
+    private static Pin pauseLEDPin = RaspiPin.GPIO_26;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         final GpioController gpio = GpioFactory.getInstance();
-        final GpioPinDigitalOutput loveLED = gpio.provisionDigitalOutputPin(loveLEDPin, "LoveLED", PinState.LOW);
-        final GpioPinDigitalOutput bannLED = gpio.provisionDigitalOutputPin(bannLEDPin, "BannLED", PinState.LOW);
-        final GpioPinDigitalOutput nextLED = gpio.provisionDigitalOutputPin(nextLEDPin, "NextLED", PinState.LOW);
-        final GpioPinDigitalOutput pauseLED = gpio.provisionDigitalOutputPin(pauseLEDPin, "PauseLED", PinState.LOW);
+        final GpioPinDigitalOutput loveLED = gpio.provisionDigitalOutputPin(loveLEDPin, "LoveLED", PinState.HIGH);
+        final GpioPinDigitalOutput bannLED = gpio.provisionDigitalOutputPin(bannLEDPin, "BannLED", PinState.HIGH);
+        final GpioPinDigitalOutput nextLED = gpio.provisionDigitalOutputPin(nextLEDPin, "NextLED", PinState.HIGH);
+        final GpioPinDigitalOutput pauseLED = gpio.provisionDigitalOutputPin(pauseLEDPin, "PauseLED", PinState.HIGH);
 
         glowLED(loveLED);
         glowLED(bannLED);
@@ -89,11 +91,11 @@ public class PBox {
     }
 
     private static void glowLED(GpioPinDigitalOutput led, int duration) {
-        led.high();
+        led.low();
         Thread t1 = new Thread(() -> {
             try {
                 TimeUnit.SECONDS.sleep(duration);
-                led.low();
+                led.high();
 
             } catch (InterruptedException e) {
                 e.printStackTrace();

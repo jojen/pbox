@@ -1,230 +1,50 @@
-Pandora Box - based on Arch Linux / Raspberry Pi
+Pandora Box / Raspberry Pi
 ================================================
 
 Betriebssystem
 --------------
 
-# Arch Linux auf auf SD Karte kopieren
+# Minibian SD Karte kopieren
 # System Booten
-# Lokale Datenbank aktualisieren
 
-```
-pacman -Syy
-```
+apt-get update
+apt-get upgrade
+apt-get install nano raspi-config
 
-# SD Karter erweitern
-```
-fdisk /dev/mmcblk0
+raspi-config
 
-Press ‘p’ to print the partition table:
+-> Resize HD
 
-Command (m for help): p
-Disk /dev/mmcblk0: 14.9 GiB, 15931539456 bytes, 31116288 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: dos
-Disk identifier: 0x417ee54b
+# configure application
+apt-get install oracle-java8-jdk pianobar python
 
-Device         Boot     Start       End  Blocks  Id System
-/dev/mmcblk0p1           2048    186367   92160   c W95 FAT32 (LBA)
-/dev/mmcblk0p2         186368   3667967 1740800   5 Extended
-/dev/mmcblk0p5         188416   3667967 1739776  83 Linux
-Press 'd' to delete a partition:
-Enter '2' to choose the second partition.
-Press 'n' to create a new partition:
-Enter 'e' to select extended as partition type.
-Partition number: <enter> to accept 2 as default partition number.
-First sector: <enter> to accept default.
-Last sector: <enter> to accept default.
-Press 'n' to create a new partition:
-Enter 'l' to select logical as partition type.
-First sector: <enter> to accept default.
-Last sector: <enter> to accept default.
-Press 'w' to write the new partition table.
+mkdir -p ~/.config/pianobar
 
-Reboot to force the kernel to recognise the new partition table.
+nano ~/.config/pianobar/config
+--> config kopieren
 
-reboot
-After the system has come back up you still have to resize the partition.
+mkdir -p /opt/pbox/run
 
-resize2fs /dev/mmcblk0p5
-output:
+## --> install application
 
-resize2fs 1.42.8 (20-Jun-2013)
-Filesystem at /dev/mmcblk0p5 is mounted on /; on-line resizing required
-old_desc_blocks = 1, new_desc_blocks = 1
-The filesystem on /dev/mmcblk0p5 is now 3865984 blocks long.
-Done!
-```
-
-Netzwerk
---------
-
-# enable WIFI
-
-```
-cp /etc/netctl/examples/wireless-wpa /etc/netctl/wlan0
-nano /etc/netctl/wlan0
-```
-
-```
-Description='A simple WPA encrypted wireless connection'
-Interface=wlan0
-Connection=wireless
-Security=wpa
-
-IP=dhcp
-
-ESSID=‘lin.jojen’
-# Prepend hexadecimal keys with \"
-# If your key starts with ", write it as '""<key>"'
-# See also: the section on special quoting rules in netctl.profile(5)
-Key=‘xxx’
-# Uncomment this if your ssid is hidden
-#Hidden=yes
-```
-
-```
-netctl start wlan0
-systemctl enable netctl-auto@wlan0
-```
-
-SSH Public Key
---------------
-
-# Auf Workstation
-```
-ssh-keygen -t rsa
-ssh-copy-id -i ~/.ssh/id_rsa.pub root@192.168.1.9
-```
+chmod +x /opt/pbox/pbox
+chmod +x /opt/pbox/event.py
 
 
-Install Python and GPIO
------------------------
-
-pacman -S python gcc
-wget https://pypi.python.org/packages/source/R/RPi.GPIO/RPi.GPIO-0.5.11.tar.gz
-tar xf RPi.GPIO-0.5.11.tar.gz
-cd RPi.GPIO-0.5.11
-python setup.py install
-
-
-Install pianobar
-----------------
-
-pacman -S pianobar
-mkdir /root/.config
-mkdir /root/.config/pianobar
-nano /root/.config/pianobar/config
-
-```
-# This is an example configuration file for pianobar. You may remove the # from
-# lines you need and copy/move this file to ~/.config/pianobar/config
-# See manpage for a description of the config keys
-#
-
-# User
-
-user = jochengaiser.de@gmail.com
-password = xxx
-# or
-#password_command = gpg --decrypt ~/password
-
-
-# Proxy (for those who are not living in the USA)
-
-#control_proxy = http://127.0.0.1:9090/
-
-
-# Keybindings
-
-#act_help = ?
-#act_songlove = +
-#act_songban = -
-#act_stationaddmusic = a
-#act_stationcreate = c
-#act_stationdelete = d
-#act_songexplain = e
-#act_stationaddbygenre = g
-#act_songinfo = i
-#act_addshared = j
-#act_songmove = m
-#act_songnext = n
-#act_songpause = S
-#act_songpausetoggle = p
-#act_songpausetoggle2 =
-#act_songplay = P
-
-#act_quit = q
-#act_stationrename = r
-#act_stationchange = s
-#act_stationcreatefromsong = v
-#act_songtired = t
-#act_upcoming = u
-#act_stationselectquickmix = x
-#act_voldown = (
-#act_volup = )
-#act_volreset = ^
-
-
-
-# Misc
-audio_quality = medium
-autostart_station = 2270728436241814724
-event_command = /opt/pbox/event.sh
-fifo = /root/.config/pianobar/ctl
-#sort = quickmix_10_name_az
-#love_icon = [+]
-#ban_icon = [-]
-#volume = 0
-
-
-# Format strings
-#format_nowplaying_song = [32m%t[0m by [34m%a[0m on %l[31m%r[0m%@%s
-#format_nowplaying_station = Station [35m%n[0m
-#format_list_song = %i) %a - %t%r
-
-
-# high-quality audio (192k mp3, for Pandora One subscribers only!)
-#audio_quality = high
-#rpc_host = internal-tuner.pandora.com
-#partner_user = pandora one
-#partner_password = TVCKIBGS9AO9TSYLNNFUML0743LH82D
-#device = D01
-#encrypt_password = 2%3WCL*JU$MP]4
-#decrypt_password = U#IO$RZPAB%VX2
-#tls_fingerprint = B0A1EB460B1B6F33A1B6CB500C6523CB2E6EC946
-```
-
-Create FIFO
------------
-
-mkfifo ~/.config/pianobar/ctl
-
-Change sound driver
--------------------
-
-pacman -S alsa-oss
-nano /etc/libao.conf
-default_driver=oss
-#dev=default
-
-
-Verzeichnisse anlegen
+configure wlan
 ---------------------
 
-mkdir /opt/pbox
+apt-get install firmware-realtek wireless-tools wpasupplicant
+nano /etc/network/interfaces
 
-Deployment
-----------
+allow-hotplug wlan0
+auto wlan0
+ 
+iface wlan0 inet dhcp
+wpa-ssid lin.jojen
+wpa-psk xxx
 
-Von der Entwicklungsmaschine die devop skripte verwenden
-oder checkout von Github
-
-
-chmod +x /opt/pbox/pbox.sh
-chmod +x /opt/pbox/event.sh
+service networking restart
 
 Autostart Applikation
 ---------------------
@@ -238,7 +58,7 @@ After=network.target
 
 [Service]
 User=root
-ExecStart=/opt/pbox/pbox.sh
+ExecStart=/opt/pbox/pbox
 
 [Install]
 WantedBy=multi-user.target
