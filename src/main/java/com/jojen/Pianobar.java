@@ -23,7 +23,6 @@ public class Pianobar {
     private File stationFile = new File(runDir + "current_station");
     private String nowPlaying = runDir + "nowplaying";
     private Integer stationId = 0;
-    private Long lastUserInteractionTime;
     private Long startTime;
     private boolean isPause = true;
     private String currentArtist = null;
@@ -37,14 +36,14 @@ public class Pianobar {
             initStationId();
             lcd = new LCD();
             lcd.show("Hallo", "", LCD.KEY_MESSAGE);
-            lastUserInteractionTime = System.currentTimeMillis();
+
             waitUntilConnected();
             startProcess();
             pianobar.expect(contains("Select station:"));
             isStarted = true;
             pianobar.sendLine(stationId + "");
-            updateSongOnDisplay();
             isPause = false;
+            updateSongOnDisplay();
 
 
         } catch (IOException e) {
@@ -70,27 +69,29 @@ public class Pianobar {
 
 
     public void nextStation() {
-        Long currentTime = System.currentTimeMillis();
-        if (currentTime - lastUserInteractionTime > 5000) {
-            try {
-                pianobar.send("s");
-                String lastRow = pianobar.expect(contains("QuickMix")).getBefore();
-                int maxStations = getMaxStations(lastRow);
-                stationId = stationId + 1;
-                if (stationId > maxStations) {
-                    stationId = 0;
-                }
-                pianobar.expect(contains("Select station:"));
-                pianobar.sendLine(stationId + "");
-                lastUserInteractionTime = currentTime;
-                isPause = false;
-                writeStationId();
-                updateStationOnDisplay();
 
-            } catch (Exception e) {
-                e.printStackTrace();
+        Properties prop = new Properties();
+        try {
+            prop.load(new FileInputStream(nowPlaying));
+            Integer stationCount = Integer.valueOf(prop.getProperty("stationCount"));
+            stationId = stationId + 1;
+            if (stationId+1 >= stationCount) {
+                stationId = 0;
             }
+
+            String stationName = prop.getProperty("station" + stationId);
+            lcd.show(stationName, "", LCD.KEY_STATION_CAHNGE);
+            writeStationId();
+            pianobar.send("s");
+            pianobar.expect(contains("Select station:"));
+            pianobar.sendLine(stationId + "");
+
+            isPause = false;
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
     public void pause() {
@@ -130,17 +131,7 @@ public class Pianobar {
         }
     }
 
-    private void updateStationOnDisplay() {
-        Properties prop = new Properties();
-        try {
-            prop.load(new FileInputStream(nowPlaying));
-            String stationName = prop.getProperty("station" + stationId);
-            lcd.show(stationName, "", LCD.KEY_STATION_CAHNGE);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void heartbeat(){
         if(!isStarted && System.currentTimeMillis() - startTime > 10000){
@@ -171,7 +162,6 @@ public class Pianobar {
                     currentArtist = artist;
                 }
 
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -189,19 +179,6 @@ public class Pianobar {
         }
     }
 
-    private int getMaxStations(String lastRow) {
-        for (int i = lastRow.length() - 1; i > 0; i--) {
-            char currentChar = lastRow.charAt(i);
-            char secondChar = lastRow.charAt(i - 1);
-            if (Character.isDigit(currentChar)) {
-                if (Character.isDigit(secondChar)) {
-                    return Integer.parseInt(lastRow.substring(i - 1, i + 1));
-                }
-                return Integer.parseInt(lastRow.substring(i, i + 1));
-            }
-        }
-        return 1;
-    }
 
     private void writeStationId() {
         try {
@@ -237,12 +214,12 @@ public class Pianobar {
                 try {
                     Thread.sleep(1000);
                     i++;
-                    lcd.show("keine Verbindung", "bereits " + i + " mal versucht","");
+                    lcd.show("starte Verbindung",  + i + ". Versuch",LCD.KEY_MESSAGE);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             } else {
-
+                lcd.show("und los gehts",  "",LCD.KEY_MESSAGE);
             }
         }
     }
